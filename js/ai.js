@@ -12,9 +12,10 @@ const ALLMOVES = [
   [2,2]
 ];
 
-// return the other player
-var otherPlayer = function (player) {
-  return player === "X" ? "O" : "X";
+// enum of players
+const players = {
+  "X": 1,
+  "O": -1
 };
 
 // hack to check if an array is in a nother array
@@ -22,9 +23,26 @@ var arrayIn = function (outerArray,innerArray) {
   return _.find(outerArray, _.partial(_.isEqual, innerArray));
 };
 
+// functions for board construction
+
+var emptyBoard = function () {
+  var newBoard = {};
+  newBoard[players.X] = [];
+  newBoard[players.O] = [];
+  return newBoard;
+};
+
+var makeBoard = function (Xs, Os) {
+  var board = emptyBoard();
+  board[players.X] = Xs;
+  board[players.O] = Os;
+  return board;
+};
+
 // determine the valid moves on a board
 var validMoves = function (board) {
-  var occupied = board.X.concat(board.O);
+  debugger;
+  var occupied = board[players.X].concat(board[players.O]);
   return ALLMOVES.filter(function(square){
     if (arrayIn(occupied,square)) {
       return false;
@@ -60,17 +78,12 @@ var findWins = function (player,board) {
 
 // make a move and return a new board
 var makeMove = function (player,board,move) {
-  var other = otherPlayer(player);
+  var other = -player; // the other player
   var newBoard = {};
   newBoard[player] = board[player].slice();
   newBoard[player].push(move);
   newBoard[other] = board[other];
   return newBoard;
-};
-
-// mapping from players to signs for negamax
-var sign = function(player) {
-  return player === "X" ? 1 : -1;
 };
 
 // decide if the game is over
@@ -96,7 +109,7 @@ var evaluate = function (myWins,otherWins) {
 // compute the value of the Board according to negamax
 var negamaxInner = function (player, board, alpha, beta) {
   var valid = validMoves(board);
-  var other = otherPlayer(player);
+  var other = -player;
   var myWins = findWins(player,board);
   var otherWins = findWins(other,board);
   if (gameOver(valid,myWins.concat(otherWins))) {
@@ -106,7 +119,7 @@ var negamaxInner = function (player, board, alpha, beta) {
     var maxVal = -Infinity;
     var pruned = _.find(valid, function (move) {
       var newBoard = makeMove(player,board,move);
-      var x = -negamaxInner(otherPlayer(player), newBoard, -beta, -alpha);
+      var x = -negamaxInner(other, newBoard, -beta, -alpha);
       if (x > maxVal) { maxVal = x; }
       if (x > alpha) { alpha = x; }
       if (alpha >= beta) { return alpha; }
@@ -128,4 +141,7 @@ if(require && require.main != module) {
   exports.isWin = isWin;
   exports.makeMove = makeMove;
   exports.negamax = negamax;
+  exports.players = players;
+  exports.emptyBoard = emptyBoard;
+  exports.makeBoard = makeBoard;
 }
