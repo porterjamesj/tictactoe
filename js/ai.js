@@ -82,6 +82,7 @@ var gameOver = function (valid,wins) {
   }
 };
 
+// evaulate a board given the wins each player has on it
 var evaluate = function (myWins,otherWins) {
   if (otherWins.length > 0) {
     return -1;
@@ -93,7 +94,7 @@ var evaluate = function (myWins,otherWins) {
 };
 
 // compute the value of the Board according to negamax
-var negamax = function (player, board) {
+var negamaxInner = function (player, board, alpha, beta) {
   var valid = validMoves(board);
   var other = otherPlayer(player);
   var myWins = findWins(player,board);
@@ -103,13 +104,20 @@ var negamax = function (player, board) {
   } else {
     // more moves to make, recurse
     var maxVal = -Infinity;
-    _.each(valid, function (move) {
+    var pruned = _.find(valid, function (move) {
       var newBoard = makeMove(player,board,move);
-      maxVal = Math.max(maxVal, -negamax(otherPlayer(player),
-                                         newBoard));
+      var x = -negamaxInner(otherPlayer(player), newBoard, -beta, -alpha);
+      if (x > maxVal) { maxVal = x; }
+      if (x > alpha) { alpha = x; }
+      if (alpha >= beta) { return alpha; }
+      return undefined;
     });
-    return maxVal;
+    return pruned ? pruned : maxVal;
   }
+};
+
+var negamax = function (player,board) {
+  return negamaxInner(player, board, -Infinity, Infinity);
 };
 
 // conditionally export things if running under test
