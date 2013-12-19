@@ -10,15 +10,16 @@ exports.chooseMove = function (player,board) {
     // first check if we have a win
     var wins = util.findWins(player,board);
     if (wins.length > 0) {
-      debugger;
       return util.makeMove(player,board,wins[0]);
     }
     // otherwise use negamax
     var valid = util.validMoves(board);
-    var best = undefined;
+    var ok = undefined;
     for(var i = 0; i < valid.length; i++) {
       var play = util.makeMove(player,board,valid[i]);
-      var val = util.negamax(player,play);
+      // the value of a play is the negation of its
+      // value from my opponents point of view
+      var val = -util.negamax(-player,play);
       if (val==1) {
         // this is a move we can win from; take it
         return play;
@@ -27,6 +28,6 @@ exports.chooseMove = function (player,board) {
         ok = play;
       }
     }
-    return best;
+    return ok;
   }
 };

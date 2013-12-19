@@ -54,22 +54,32 @@ var validMoves = exports.validMoves = function (board) {
 };
 
 // check if a move results in a win
-var isWin = exports.isWin = function(moves,i) {
-  var winPairs = [
-    [ [i[0]+1,i[1]], [i[0]-1,i[1]] ],
-    [ [i[0],i[1]+1], [i[0],i[1]-1] ],
-    [ [i[0]+1,i[1]-1], [i[0]-1,i[1]+1] ],
-    [ [i[0]-1,i[1]-1], [i[0]+1,i[1]+1] ]
-  ];
-
-  if(_.some(winPairs,function (pair) {
-    return arrayIn(moves,pair[0]) && arrayIn(moves,pair[1]);
-  })) {
-    return true;
-  } else {
-    // not a win
-    return false;
-  }
+// if called with a single argument, checks if the given squares
+// constitute a win
+var isWin = exports.isWin = function(moves,move) {
+  var newMoves = move ? _.union(moves,[move]) : moves;
+  var colCounts = _(3).times(function (n) {
+    return newMoves.filter(function (move) {
+      return move[0] === n;
+    }).length;
+  });
+  var rowCounts = _(3).times(function (n) {
+    return newMoves.filter(function (move) {
+      return move[1] === n;
+    }).length;
+  });
+  var diagCounts = _(3).times(function (n) {
+    return newMoves.filter(function (move) {
+      return move[1] === move[0];
+    }).length;
+  });
+  var antidiagCounts = _(3).times(function (n) {
+    return newMoves.filter(function (move) {
+      return move[0]+move[1] === 2;
+    }).length;
+  });
+  return _.some(_.union(rowCounts,colCounts,
+                        diagCounts,antidiagCounts),function (n) { return n === 3;});
 };
 
 // report all moves with which a player can win on this board
@@ -107,27 +117,43 @@ var evaluate = function (myWins,otherWins) {
   }
 };
 
-// compute the value of the Board according to negamax
+/*
+ * negamaxInner - use negamax algorithm and alpha/beta pruning to
+ * determine the value of `board` from the perspective of
+ * `player`. values are as follows:
+ *
+ * -1: player will lose
+ * 0: game will draw
+ * 1: player has a path to victory
+ *
+ * Note that this implementation assumes that `player's` opponent
+ * has just played, so `player` will be the next to make a move
+ */
 var negamaxInner = function (player, board, alpha, beta) {
+  debugger;
   var valid = validMoves(board);
   var other = -player;
   var myWins = findWins(player,board);
   var otherWins = findWins(other,board);
-  if (gameOver(valid,myWins.concat(otherWins))) {
-    return evaluate(myWins,otherWins);
+  if (isWin(board[other])) {
+    return -1;
+  } else if (isWin(board[player])) {
+    return 1;
+  } else if (valid.length===0) {
+    // the game is a tie
+    return 0;
   } else {
     // more moves to make, recurse
     var maxVal = -Infinity;
-    var pruned = _.find(valid, function (move) {
-      var newBoard = makeMove(player,board,move);
+    for (var i in valid) {
+      var newBoard = makeMove(player,board,valid[i]);
       var x = -negamaxInner(other, newBoard, -beta, -alpha);
-      if (x > maxVal) { maxVal = x; }
-      if (x > alpha) { alpha = x; }
-      if (alpha >= beta) { return alpha; }
-      return undefined;
-    });
-    return pruned ? pruned : maxVal;
+      if (x>maxVal) { maxVal = x; }
+      if (x>alpha) { alpha = x; }
+      if (alpha>=beta) { return alpha; }
+    }
   }
+  return maxVal;
 };
 
 
