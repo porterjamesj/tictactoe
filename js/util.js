@@ -97,26 +97,6 @@ var makeMove = exports.makeMove = function (player,board,move) {
   return newBoard;
 };
 
-// decide if the game is over
-var gameOver = exports.gameOver = function (valid,wins) {
-  if (valid.length===1 || wins.length>0) {
-    return true;
-  } else {
-    return false;
-  }
-};
-
-// evaulate a board given the wins each player has on it
-var evaluate = function (myWins,otherWins) {
-  if (otherWins.length > 0) {
-    return -1;
-  } else if (myWins.length > 0) {
-    return 1;
-  } else {
-    return 0;
-  }
-};
-
 /*
  * negamaxInner - use negamax algorithm and alpha/beta pruning to
  * determine the value of `board` from the perspective of
@@ -133,8 +113,6 @@ var negamaxInner = function (player, board, alpha, beta) {
   debugger;
   var valid = validMoves(board);
   var other = -player;
-  var myWins = findWins(player,board);
-  var otherWins = findWins(other,board);
   if (isWin(board[other])) {
     return -1;
   } else if (isWin(board[player])) {
