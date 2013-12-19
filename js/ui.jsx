@@ -10,7 +10,7 @@ const aiPlayer = util.players.O;
 
 var Board = exports.Board = React.createClass({
   getInitialState: function () {
-    return {board:util.makeBoard([[0,0]],[[2,1]])};
+    return {board:util.makeBoard([],[])};
   },
   render: function () {
     var self = this;
@@ -23,7 +23,7 @@ var Board = exports.Board = React.createClass({
             return (
                 <td x={i}
                     y={j}>
-                  {_.invert(util.players)[player]}
+                  {_.invert(util.players)[player] /* display the symbol */}
                 </td>
             );
           }
@@ -44,6 +44,11 @@ var Board = exports.Board = React.createClass({
     );
   },
   handleClick: function (i,j) {
-    this.setState({board:util.makeMove(humanPlayer,this.state.board,[i,j])});
+    // the new board after the human player's play
+    var humanPlay = util.makeMove(humanPlayer,this.state.board,[i,j]);
+    console.log(humanPlay);
+    // let the ai respond
+    this.setState({board:ai.chooseMove(aiPlayer,humanPlay)});
+    console.log(this.state.board);
   }
 });
