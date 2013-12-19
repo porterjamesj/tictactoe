@@ -68,18 +68,14 @@ var isWin = exports.isWin = function(moves,move) {
       return move[1] === n;
     }).length;
   });
-  var diagCounts = _(3).times(function (n) {
-    return newMoves.filter(function (move) {
+  var diagCounts = newMoves.filter(function (move) {
       return move[1] === move[0];
     }).length;
-  });
-  var antidiagCounts = _(3).times(function (n) {
-    return newMoves.filter(function (move) {
+  var antidiagCounts = newMoves.filter(function (move) {
       return move[0]+move[1] === 2;
     }).length;
-  });
   return _.some(_.union(rowCounts,colCounts,
-                        diagCounts,antidiagCounts),function (n) { return n === 3;});
+                        [diagCounts],[antidiagCounts]),function (n) { return n === 3;});
 };
 
 // report all moves with which a player can win on this board
