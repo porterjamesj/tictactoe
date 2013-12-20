@@ -16,7 +16,7 @@ var amap = function (f,coll) {
 
 var symbolFor = function (player) {
   return player===1?"X":"O";
-}
+};
 
 var Board = exports.Board = React.createClass({
   getInitialState: function () {
