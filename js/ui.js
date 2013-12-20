@@ -22,7 +22,7 @@ var symbolFor = function (player) {
 // generate a random game opening (the randomness is in who goes first)
 var randOpening = function () {
   return Math.random()>0.5?
-    {board:util.makeBoard([],[])} : {board:util.makeBoard([],[vec(1,0)])};
+    {board:util.makeBoard([],[])} : {board:util.makeBoard([],[vec(0,0)])};
 };
 
 /*
