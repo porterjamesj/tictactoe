@@ -24,52 +24,63 @@ var randOpening = function () {
     {board:util.makeBoard([],[])} : {board:util.makeBoard([],[vec(1,0)])};
 };
 
+var makeTable = function (board, dim) {
+  var self = this;
+    /*
+     * To draw the board we map over the range (0,dim) twice,
+     * returning a tr at the first level and a td at the the second
+     * level, resutling in a dim x dim sized table . By using the
+     * information in the board, we can determine what the td should
+     * look like.
+     */
+  var range = m.range(0,dim); // the size of the board is determined by this
+  return React.DOM.table({}, amap(function (i) {
+    return React.DOM.tr({}, amap(function (j) {
+      var maybeTakenSpace = m.some(function (pair){
+        var player = m.get(pair,0);
+        var plays = m.get(pair,1);
+        if (m.get(plays,vec(i,j))) {
+          // in this case, player has played here
+          return React.DOM.td({className:symbolFor(player)},
+                              symbolFor(player));
+        } else {
+          // no one has played here
+          return null;
+        }
+      },board);
+      return maybeTakenSpace != null ? maybeTakenSpace :
+        React.DOM.td({onClick:self.handleClick.bind(this,i,j)},' ');
+    },range));
+  },range));
+};
+
 
 var Game = exports.Game = React.createClass({
   getInitialState: function () {
     return randOpening();
   },
   render: function () {
-    var self = this;
     var board = this.state.board;
-    var dim = m.range(0,3); // the size of the board is determined by this
-    /*
-     * To draw the board we map over dim twice, returning a tr at the
-     * first level and a td at the the second level, resutling in a
-     * dim x dim sized table . By using the information in the board,
-     * we can determine what the td should look like.
-     */
-    var table = React.DOM.table({}, amap(function (i) {
-        return React.DOM.tr({}, amap(function (j) {
-          var maybeTakenSpace = m.some(function (pair){
-            var player = m.get(pair,0);
-            var plays = m.get(pair,1);
-            if (m.get(plays,vec(i,j))) {
-              // in this case, player has played here
-              return React.DOM.td({className:symbolFor(player)},
-                                  symbolFor(player));
-            } else {
-              // no one has played here
-              return null;
-            }
-          },board);
-          return maybeTakenSpace != null ? maybeTakenSpace :
-            React.DOM.td({onClick:self.handleBoardClick.bind(this,i,j)},' ');
-        },dim));
-      },dim));
+    // draw 3 by 3 board
+    var table = makeTable.call(this,board,3);
 
     // check if the game is over
     var over = util.isOver(board);
-    var message, maybeHandleClick;
-    if (over != null) {
-      message = "Game over! Refersh to play again";
-    } else {
-      message = "Click to make a move";
+    var message;
+    if (over === null) {
+      message = "Click to make a move.";
+    } else if (over===0) {
+      message = "Draw! Refresh to play again.";
+    } else if (over===-1) {
+      message = "AI wins! Refresh to play again";
+    } else if (over===1) {
+      message = "You win! Refresh to play again";
     }
-    return React.DOM.div({onKeyPress:maybeHandleClick},
-                         [React.DOM.span({},message),table]);
+
+    // Return a div with the board and a message
+    return React.DOM.div({}, [React.DOM.span({},message),table]);
   },
-  handleBoardClick: function (i,j) {
+  handleClick: function (i,j) {
     // the new board after the human player's play
     var humanPlay = util.makeMove(humanPlayer,this.state.board,vec(i,j));
     if(util.isOver(humanPlay) != null) {
@@ -79,9 +90,5 @@ var Game = exports.Game = React.createClass({
       // if not, let the ai respond
       this.setState({board:ai.chooseMove(aiPlayer,humanPlay)});
     }
-  },
-  handleRestart: function (keypress) {
-    debugger;
-
   }
 });
