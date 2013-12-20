@@ -14,25 +14,26 @@ var amap = function (f,coll) {
   return m.into_array(m.map(f,coll));
 };
 
+// draw the correct symbol for a player
 var symbolFor = function (player) {
   return player===1?"X":"O";
 };
 
-
+// generate a random game opening (the randomness is in who goes first)
 var randOpening = function () {
   return Math.random()>0.5?
     {board:util.makeBoard([],[])} : {board:util.makeBoard([],[vec(1,0)])};
 };
 
+/*
+ * To draw the table for a board of size dim, we map over the range
+ * (0,dim) twice, returning a tr at the first level and a td at the
+ * the second level, resutling in a dim x dim sized table . By using
+ * the information in the board, we can determine what the td should
+ * look like.
+ */
 var makeTable = function (board, dim) {
   var self = this;
-    /*
-     * To draw the board we map over the range (0,dim) twice,
-     * returning a tr at the first level and a td at the the second
-     * level, resutling in a dim x dim sized table . By using the
-     * information in the board, we can determine what the td should
-     * look like.
-     */
   var range = m.range(0,dim); // the size of the board is determined by this
   return React.DOM.table({}, amap(function (i) {
     return React.DOM.tr({}, amap(function (j) {
@@ -55,6 +56,9 @@ var makeTable = function (board, dim) {
 };
 
 
+/* The game component consists of the table for the board
+ * and a brief message describing the game state.
+ */
 var Game = exports.Game = React.createClass({
   getInitialState: function () {
     return randOpening();
@@ -78,7 +82,8 @@ var Game = exports.Game = React.createClass({
     }
 
     // Return a div with the board and a message
-    return React.DOM.div({}, [React.DOM.span({},message),table]);
+    return React.DOM.div({},
+                         [React.DOM.p({className:"banner"},message),table]);
   },
   handleClick: function (i,j) {
     // the new board after the human player's play

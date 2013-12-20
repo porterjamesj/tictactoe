@@ -5,6 +5,13 @@
     text-align: center;
 }
 
+.banner {
+    font-family: Arial;
+    margin: auto;
+    text-align: center;
+    padding: 50px;
+}
+
 table {
     margin: auto;
     font-family: Arial;
