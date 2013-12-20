@@ -1,5 +1,5 @@
 var ui = require("./ui.js");
-var React = require("react-tools").React;
+var React = require("react");
 
 React.renderComponent(ui.Board(),
                       document.getElementById('content'));

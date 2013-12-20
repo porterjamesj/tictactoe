@@ -1,6 +1,6 @@
 var ai = require("./ai.js");
 var util = require("./util.js");
-var React = require("react-tools").React;
+var React = require("react");
 var m = require("mori");
 var vec = m.vector;
 
@@ -39,7 +39,8 @@ var Board = exports.Board = React.createClass({
           var plays = m.get(pair,1);
           if (m.get(plays,vec(i,j))) {
             // in this case, player has played here
-            return React.DOM.td({}, symbolFor(player));
+            return React.DOM.td({className:symbolFor(player)},
+                                symbolFor(player));
           } else {
             // no one has played here
             return null;
@@ -47,13 +48,12 @@ var Board = exports.Board = React.createClass({
         },board);
         return maybeTakenSpace != null ?
           maybeTakenSpace : React.DOM.td({onClick:self.handleClick.bind(this,i,j)},
-                                         '0');
+                                         ' ');
         },dim));
     },dim));
   },
   handleClick: function (i,j) {
     // the new board after the human player's play
-    debugger;
     var humanPlay = util.makeMove(humanPlayer,this.state.board,vec(i,j));
     // let the ai respond
     this.setState({board:ai.chooseMove(aiPlayer,humanPlay)});
