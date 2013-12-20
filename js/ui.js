@@ -18,9 +18,16 @@ var symbolFor = function (player) {
   return player===1?"X":"O";
 };
 
-var Board = exports.Board = React.createClass({
+
+var randOpening = function () {
+  return Math.random()>0.5?
+    {board:util.makeBoard([],[])} : {board:util.makeBoard([],[vec(1,0)])};
+};
+
+
+var Game = exports.Game = React.createClass({
   getInitialState: function () {
-    return {board:util.makeBoard([],[])};
+    return randOpening();
   },
   render: function () {
     var self = this;
@@ -32,30 +39,49 @@ var Board = exports.Board = React.createClass({
      * dim x dim sized table . By using the information in the board,
      * we can determine what the td should look like.
      */
-    return React.DOM.table({}, amap(function (i) {
-      return React.DOM.tr({}, amap(function (j) {
-        var maybeTakenSpace = m.some(function (pair){
-          var player = m.get(pair,0);
-          var plays = m.get(pair,1);
-          if (m.get(plays,vec(i,j))) {
-            // in this case, player has played here
-            return React.DOM.td({className:symbolFor(player)},
-                                symbolFor(player));
-          } else {
-            // no one has played here
-            return null;
-          }
-        },board);
-        return maybeTakenSpace != null ?
-          maybeTakenSpace : React.DOM.td({onClick:self.handleClick.bind(this,i,j)},
-                                         ' ');
+    var table = React.DOM.table({}, amap(function (i) {
+        return React.DOM.tr({}, amap(function (j) {
+          var maybeTakenSpace = m.some(function (pair){
+            var player = m.get(pair,0);
+            var plays = m.get(pair,1);
+            if (m.get(plays,vec(i,j))) {
+              // in this case, player has played here
+              return React.DOM.td({className:symbolFor(player)},
+                                  symbolFor(player));
+            } else {
+              // no one has played here
+              return null;
+            }
+          },board);
+          return maybeTakenSpace != null ? maybeTakenSpace :
+            React.DOM.td({onClick:self.handleBoardClick.bind(this,i,j)},' ');
         },dim));
-    },dim));
+      },dim));
+
+    // check if the game is over
+    var over = util.isOver(board);
+    var message, maybeHandleClick;
+    if (over != null) {
+      message = "Game over! Refersh to play again";
+    } else {
+      message = "Click to make a move";
+    }
+    return React.DOM.div({onKeyPress:maybeHandleClick},
+                         [React.DOM.span({},message),table]);
   },
-  handleClick: function (i,j) {
+  handleBoardClick: function (i,j) {
     // the new board after the human player's play
     var humanPlay = util.makeMove(humanPlayer,this.state.board,vec(i,j));
-    // let the ai respond
-    this.setState({board:ai.chooseMove(aiPlayer,humanPlay)});
+    if(util.isOver(humanPlay) != null) {
+      // if that ends the game, just leave the state here
+      this.setState({board:humanPlay});
+    } else {
+      // if not, let the ai respond
+      this.setState({board:ai.chooseMove(aiPlayer,humanPlay)});
+    }
+  },
+  handleRestart: function (keypress) {
+    debugger;
+
   }
 });

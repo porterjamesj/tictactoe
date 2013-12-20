@@ -21,6 +21,23 @@ const X = m.get(players,"X");
 const O = m.get(players,"O");
 exports.players = players;
 
+
+// if somebody won, return who
+// if it's a draw, return zero
+// if the games is not over, return null
+exports.isOver = function (board) {
+  var valid = validMoves(board);
+  if (m.count(valid)===0) {
+    return 0; //draw
+  } else {
+    return m.some(function (pair) {
+      var plays = m.get(pair,1);
+      return isWin(plays) ? m.get(pair,0) : null;
+    },board);
+  }
+};
+
+
 // functions for board construction
 
 var emptyBoard = exports.emptyBoard = function () {

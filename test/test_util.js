@@ -59,3 +59,23 @@ describe("makeMove",function(){
                     util.makeBoard([vec(0,0)],[])));
   });
 });
+
+describe("isOver",function(){
+  it("should say if a player won",function(){
+    assert(m.equals(util.isOver(util.makeBoard([vec(0,0),vec(0,1),vec(0,2)],[])),
+                    X));
+  });
+  it("should detect draws",function(){
+    assert(m.equals(util.isOver(
+      util.makeBoard([vec(0,0),vec(1,1),vec(0,2),vec(2,1),vec(1,2)],
+                     [vec(0,1),vec(1,0),vec(2,2),vec(2,0)])),
+                    0));
+  });
+  it("should return null if game is not over",function(){
+    assert(m.equals(util.isOver(
+      util.makeBoard([vec(0,0),vec(1,2)],
+                     [vec(0,1),vec(1,0),vec(2,2),vec(2,0)])),
+                    null));
+  });
+
+});
