@@ -55,10 +55,21 @@ var negamax = exports.negamax = function (player,board) {
 
 // use negamax and some heuristics to choose a move
 exports.chooseMove = function (player,board) {
-  if (m.equals(board,util.emptyBoard())) {
-    // play the corner
+  var plays = m.union(m.get(board,player),m.get(board,-player));
+  var numPlays = m.count(plays);
+  debugger;
+  if (numPlays===0) {
+    // play the corner if the board is empty
     return util.makeMove(player,board,vec(0,0));
-  } else {
+  } else if (numPlays===1) {
+    if (m.get(plays,vec(1,1))) {
+      // play the corner if the center is taken
+      return util.makeMove(player,board,vec(0,0));
+    } else {
+      // play the center
+      return util.makeMove(player,board,vec(1,1));
+    }
+  } else{
     // first check if we have a win
     var wins = util.findWins(player,board);
     if (!m.is_empty(wins)) {
