@@ -1,5 +1,7 @@
 var util = require('./util.js');
-var _ = require('underscore');
+var m = require("mori");
+var vec = m.vector;
+var set = m.set;
 
 /*
  * negamaxInner - use negamax algorithm and alpha/beta pruning to
@@ -14,28 +16,33 @@ var _ = require('underscore');
  * has just played, so `player` will be the next to make a move
  */
 var negamaxInner = function (player, board, alpha, beta) {
-  debugger;
   var valid = util.validMoves(board);
   var other = -player;
-  if (util.isWin(board[other])) {
+  var count = m.count(valid);
+  if (util.isWin(m.get(board,other))) {
     return -1;
-  } else if (util.isWin(board[player])) {
+  } else if (util.isWin(m.get(board,player))) {
     return 1;
-  } else if (valid.length===0) {
+  } else if (count===0) {
     // the game is a tie
     return 0;
   } else {
     // more moves to make, recurse
     var maxVal = -Infinity;
-    for (var i in valid) {
-      var newBoard = util.makeMove(player,board,valid[i]);
+    var maybePruned = m.some(function (move) {
+      var newBoard = util.makeMove(player,board,move);
       var x = -negamaxInner(other, newBoard, -beta, -alpha);
       if (x>maxVal) { maxVal = x; }
       if (x>alpha) { alpha = x; }
       if (alpha>=beta) { return alpha; }
-    }
+      // if we can't alpha/beta prune, we have to keep looking
+      // return null to indicate this to some
+      return null;
+    },valid);
   }
-  return maxVal;
+  // we alpha/beta pruning occurred, we want to return that value
+  // if it didn't, we just return the max value we saw
+  return maybePruned ? maybePruned: maxVal;
 };
 
 
@@ -48,20 +55,20 @@ var negamax = exports.negamax = function (player,board) {
 
 // use negamax and some heuristics to choose a move
 exports.chooseMove = function (player,board) {
-  if (_.isEqual(board,util.emptyBoard())) {
+  if (m.equals(board,util.emptyBoard())) {
     // play the corner
-    return  util.makeMove(player,board,[0,0]);
+    return util.makeMove(player,board,vec(0,0));
   } else {
     // first check if we have a win
     var wins = util.findWins(player,board);
-    if (wins.length > 0) {
-      return util.makeMove(player,board,wins[0]);
+    if (!m.is_empty(wins)) {
+      return util.makeMove(player,board,m.first(wins));
     }
     // otherwise use negamax
-    var valid = util.validMoves(board);
+    var valid = m.seq(util.validMoves(board));
     var ok = undefined;
-    for(var i = 0; i < valid.length; i++) {
-      var play = util.makeMove(player,board,valid[i]);
+    for(var i = 0; i < m.count(valid); i++) {
+      var play = util.makeMove(player,board,m.nth(valid,i));
       // the value of a play is the negation of its
       // value from my opponents point of view
       var val = -negamax(-player,play);

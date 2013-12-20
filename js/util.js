@@ -1,94 +1,81 @@
-var _ = require("underscore");
+var m = require("mori");
+var vec = m.vector;
+var set = m.set;
+var hashmap = m.hash_map;
 
-const ALLMOVES = [
-  [0,0],
-  [0,1],
-  [0,2],
-  [1,0],
-  [1,1],
-  [1,2],
-  [2,0],
-  [2,1],
-  [2,2]
-];
-exports.ALLMOVES = ALLMOVES;
+const ALLMOVES = exports.ALLMOVES = set([
+  vec(0,0),
+  vec(0,1),
+  vec(0,2),
+  vec(1,0),
+  vec(1,1),
+  vec(1,2),
+  vec(2,0),
+  vec(2,1),
+  vec(2,2)
+]);
 
 // enum of players
-const players = {
-  "X": 1,
-  "O": -1
-};
+var players = hashmap("X",1,"O",-1);
+const X = m.get(players,"X");
+const O = m.get(players,"O");
 exports.players = players;
-
-// hack to check if an array is in a nother array
-var arrayIn = exports.arrayIn = function (outerArray,innerArray) {
-  return _.find(outerArray, _.partial(_.isEqual, innerArray));
-};
 
 // functions for board construction
 
 var emptyBoard = exports.emptyBoard = function () {
-  var newBoard = {};
-  newBoard[players.X] = [];
-  newBoard[players.O] = [];
-  return newBoard;
+  return hashmap(X,set(),O,set());
 };
 
 var makeBoard = exports.makeBoard = function (Xs, Os) {
-  var board = emptyBoard();
-  board[players.X] = Xs;
-  board[players.O] = Os;
-  return board;
+  return hashmap(X,m.set(Xs),O,m.set(Os));
 };
 
 // determine the valid moves on a board
 var validMoves = exports.validMoves = function (board) {
-  var occupied = board[players.X].concat(board[players.O]);
-  return ALLMOVES.filter(function(square){
-    if (arrayIn(occupied,square)) {
-      return false;
-    } else {
-      return true;
-    }
-  });
+  return m.set(m.filter(function(move){
+    return !m.has_key(m.get(board,X),move) && !m.has_key(m.get(board,O),move);
+  },ALLMOVES));
 };
 
-// check if a move results in a win
-// if called with a single argument, checks if the given squares
-// constitute a win
-var isWin = exports.isWin = function(moves,move) {
-  var newMoves = move ? _.union(moves,[move]) : moves;
-  var colCounts = _(3).times(function (n) {
-    return newMoves.filter(function (move) {
-      return move[0] === n;
-    }).length;
+// check if a set of moves constitutes a wi
+var isWin = exports.isWin = function(moves) {
+  /*
+   * Algorithm is to walk over the set of moves,
+   * keeping track of how many moves we've seen
+   * that are in each column, row, the diagonal, and
+   * the antidiagonal. These moves are a win if there
+   * are three moves in any of these
+   */
+  var col = [0,0,0]; // three slots, one for each column
+  var row = [0,0,0]; // correspondingly for rows
+  var diag = 0, antidiag = 0;
+  m.each(moves, function (move) {
+    var i = m.nth(move,0);
+    var j = m.nth(move,1);
+    // add to appropriate column and row
+    col[i]++;
+    row[j]++;
+    // add to diag if we are on it
+    if (i===j) { diag++; }
+    if (i+j===2) { antidiag++; }
   });
-  var rowCounts = _(3).times(function (n) {
-    return newMoves.filter(function (move) {
-      return move[1] === n;
-    }).length;
-  });
-  var diagCounts = newMoves.filter(function (move) {
-      return move[1] === move[0];
-    }).length;
-  var antidiagCounts = newMoves.filter(function (move) {
-      return move[0]+move[1] === 2;
-    }).length;
-  return _.some(_.union(rowCounts,colCounts,
-                        [diagCounts],[antidiagCounts]),function (n) { return n === 3;});
+  // now we return true if any of any row, col, or diag had three moves in it
+  var all = col.concat(row,diag,antidiag);
+  return all.filter(function (n) { return n===3; }).length > 0;
 };
 
 // report all moves with which a player can win on this board
 var findWins = exports.findWins = function (player,board) {
-  return _.filter(validMoves(board),_.partial(isWin,board[player]));
+  var valid = validMoves(board);
+  var sofar = m.get(board,player);
+  return m.set(m.filter(function (move) {
+    return isWin(m.conj(sofar,move));
+  },valid));
 };
 
 // make a move and return a new board
 var makeMove = exports.makeMove = function (player,board,move) {
-  var other = -player; // the other player
-  var newBoard = {};
-  newBoard[player] = board[player].slice();
-  newBoard[player].push(move);
-  newBoard[other] = board[other];
-  return newBoard;
+  return m.assoc(board,player,
+                 m.conj(m.get(board,player),move));
 };
